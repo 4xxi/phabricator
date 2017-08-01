@@ -8,6 +8,7 @@ final class PhabricatorProjectColumnQuery
   private $projectPHIDs;
   private $proxyPHIDs;
   private $statuses;
+  private $datasourceQuery;
 
   public function withIDs(array $ids) {
     $this->ids = $ids;
@@ -31,6 +32,11 @@ final class PhabricatorProjectColumnQuery
 
   public function withStatuses(array $status) {
     $this->statuses = $status;
+    return $this;
+  }
+
+  public function withDatasourceQuery($query) {
+    $this->datasourceQuery = $query;
     return $this;
   }
 
@@ -118,42 +124,85 @@ final class PhabricatorProjectColumnQuery
     return $page;
   }
 
+  protected function getPrimaryTableAlias() {
+    return 'col';
+  }
+
+  protected function buildSelectClauseParts(AphrontDatabaseConnection $conn) {
+    $parts = parent::buildSelectClauseParts($conn);
+
+    $parts[] = 'col.*';
+
+    if ($this->shouldJoinProjectTable()) {
+      $parts[] = 'proj.name projectName';
+    }
+
+    return $parts;
+  }
+
+  protected function buildJoinClauseParts(AphrontDatabaseConnection $conn) {
+    $joins = parent::buildJoinClauseParts($conn);
+
+    if ($this->shouldJoinProjectTable()) {
+      $joins[] = qsprintf(
+        $conn,
+        'LEFT JOIN %T proj ON col.projectPHID = proj.phid',
+        id(new PhabricatorProject())->getTableName()
+      );
+    }
+
+    return $joins;
+  }
+
+  private function shouldJoinProjectTable() {
+    return (strlen($this->datasourceQuery) ? true : false);
+  }
+
   protected function buildWhereClauseParts(AphrontDatabaseConnection $conn) {
     $where = parent::buildWhereClauseParts($conn);
 
     if ($this->ids !== null) {
       $where[] = qsprintf(
         $conn,
-        'id IN (%Ld)',
+        'col.id IN (%Ld)',
         $this->ids);
     }
 
     if ($this->phids !== null) {
       $where[] = qsprintf(
         $conn,
-        'phid IN (%Ls)',
+        'col.phid IN (%Ls)',
         $this->phids);
     }
 
     if ($this->projectPHIDs !== null) {
       $where[] = qsprintf(
         $conn,
-        'projectPHID IN (%Ls)',
+        'col.projectPHID IN (%Ls)',
         $this->projectPHIDs);
     }
 
     if ($this->proxyPHIDs !== null) {
       $where[] = qsprintf(
         $conn,
-        'proxyPHID IN (%Ls)',
+        'col.proxyPHID IN (%Ls)',
         $this->proxyPHIDs);
     }
 
     if ($this->statuses !== null) {
       $where[] = qsprintf(
         $conn,
-        'status IN (%Ld)',
+        'col.status IN (%Ld)',
         $this->statuses);
+    }
+
+    if (strlen($this->datasourceQuery)) {
+      $where[] = qsprintf(
+        $conn,
+        'LOWER(col.name) LIKE LOWER(%>) OR proj.name LIKE %>',
+        $this->datasourceQuery,
+        $this->datasourceQuery
+      );
     }
 
     return $where;

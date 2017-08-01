@@ -26,6 +26,7 @@ abstract class HeraldAdapter extends Phobject {
   const CONDITION_NOT_BIT         = '!bit';
   const CONDITION_IS_TRUE         = 'true';
   const CONDITION_IS_FALSE        = 'false';
+  const CONDITION_MOVED_TO        = 'moved-to';
 
   private $contentSource;
   private $isNewObject;
@@ -349,6 +350,7 @@ abstract class HeraldAdapter extends Phobject {
       self::CONDITION_REGEXP_PAIR     => pht('matches regexp pair'),
       self::CONDITION_HAS_BIT         => pht('has bit'),
       self::CONDITION_NOT_BIT         => pht('lacks bit'),
+      self::CONDITION_MOVED_TO        => pht('moved to any of'),
     );
   }
 
@@ -403,6 +405,7 @@ abstract class HeraldAdapter extends Phobject {
       case self::CONDITION_IS_NOT_ME:
         return ($field_value != $rule->getAuthorPHID());
       case self::CONDITION_IS_ANY:
+      case self::CONDITION_MOVED_TO:
         if (!is_array($condition_value)) {
           throw new HeraldInvalidConditionException(
             pht('Expected condition value to be an array.'));
@@ -605,6 +608,7 @@ abstract class HeraldAdapter extends Phobject {
       case self::CONDITION_NOT_BIT:
       case self::CONDITION_IS_TRUE:
       case self::CONDITION_IS_FALSE:
+      case self::CONDITION_MOVED_TO:
         // No explicit validation for these types, although there probably
         // should be in some cases.
         break;
