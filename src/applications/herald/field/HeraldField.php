@@ -53,6 +53,7 @@ abstract class HeraldField extends Phobject {
         return array(
           HeraldAdapter::CONDITION_IS_ANY,
           HeraldAdapter::CONDITION_IS_NOT_ANY,
+          HeraldAdapter::CONDITION_MOVED_TO,
         );
       case self::STANDARD_PHID_LIST:
         return array(
