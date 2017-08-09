@@ -281,6 +281,34 @@ final class ManiphestTaskDetailController extends ManiphestController {
         ->setDisabled(!$can_edit)
         ->setWorkflow($workflow_edit));
 
+    if (!$task->isClosed()) {
+      $curtain->addAction(
+        id(new PhabricatorActionView())
+          ->setName(pht('Resolve task'))
+          ->setIcon('fa-check-circle-o')
+          ->setHref($this->getApplicationURI(sprintf(
+              "/task/%d/resolve?%s=%s",
+              $id,
+              AphrontRequest::getCSRFTokenName(),
+              $viewer->getCSRFToken()
+          )))
+          ->setDisabled(!$can_edit)
+          ->setWorkflow($workflow_edit));
+    } else {
+      $curtain->addAction(
+        id(new PhabricatorActionView())
+          ->setName(pht('Reopen task'))
+          ->setIcon('fa-undo')
+          ->setHref($this->getApplicationURI(sprintf(
+              "/task/%d/reopen?%s=%s",
+              $id,
+              AphrontRequest::getCSRFTokenName(),
+              $viewer->getCSRFToken()
+          )))
+          ->setDisabled(!$can_edit)
+          ->setWorkflow($workflow_edit));
+    }
+
     $edit_config = $edit_engine->loadDefaultEditConfiguration($task);
     $can_create = (bool)$edit_config;
 

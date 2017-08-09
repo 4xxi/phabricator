@@ -52,6 +52,7 @@ final class PhabricatorManiphestApplication extends PhabricatorApplication {
         'task/' => array(
           $this->getEditRoutePattern('edit/')
             => 'ManiphestTaskEditController',
+          '(?P<id>[0-9]\d+)/(?P<verb>resolve|reopen)' => 'ManiphestTaskFastActionController',
         ),
         'export/(?P<key>[^/]+)/' => 'ManiphestExportController',
         'subpriority/' => 'ManiphestSubpriorityController',
